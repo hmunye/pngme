@@ -20,3 +20,4 @@ This project is licensed under the [MIT License].
 [MIT License]: https://github.com/hmunye/pngme/blob/main/LICENSE
 
 ## References
+[PNG Specification](https://www.w3.org/TR/png-3/)

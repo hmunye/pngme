@@ -13,3 +13,4 @@ categories = ["command-line-interface", "command-line-utilities"]
 keywords = ["cli"]
 
 [dependencies]
+anyhow = "1.0.100"
