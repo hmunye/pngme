@@ -1,0 +1,15 @@
+[package]
+name = "pngme"
+version = "0.1.0"
+edition = "2024"
+authors = ["Huseen Munye"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/hmunye/pngme"
+description = """
+Command-line tool for embedding and retrieving messages in PNG files.
+"""
+categories = ["command-line-interface", "command-line-utilities"]
+keywords = ["cli"]
+
+[dependencies]
