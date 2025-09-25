@@ -1,5 +1,5 @@
-//! Chunk types are four-byte sequences corresponding to readable labels. The
-//! first four are termed critical chunks, which consist of:
+//! PNG chunk types are four-byte sequences corresponding to readable labels.
+//! The first four are termed critical chunks, which consist of:
 //!
 //! - IHDR: image header, which is the first chunk in a PNG datastream.
 //! - PLTE: palette table associated with indexed PNG images.
@@ -7,7 +7,7 @@
 //! - IEND: image trailer, which is the last chunk in a PNG datastream.
 //!
 //! The remaining chunk types are termed ancillary chunk types, which encoders
-//! may generate and decoders may interpret.
+//! may generate and decoders may interpret:
 //!
 //! - Transparency information: tRNS.
 //! - Color space information: cHRM, gAMA, iCCP, sBIT, sRGB, cICP, mDCV.
@@ -20,16 +20,14 @@ use std::convert::TryFrom;
 use std::str::{self, FromStr};
 use std::{fmt, result};
 
-/// A sequence of four bytes, restricted to the hexadecimal values 41 to 5A and
-/// 61 to 7A. These correspond to the uppercase and lowercase letters (A-Z, a-z)
-/// respectively.
+/// Chunk type of a chunk within a PNG datastream.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct ChunkType {
     inner: [u8; 4],
 }
 
 impl ChunkType {
-    /// Returns the raw bytes of the PNG chunk type.
+    /// Returns the raw bytes of the chunk type.
     #[inline]
     pub const fn bytes(&self) -> [u8; 4] {
         self.inner
@@ -38,6 +36,7 @@ impl ChunkType {
     /// Returns `true` if the chunk type is valid.
     #[inline]
     pub fn is_valid(&self) -> bool {
+        // Other validation occurs when constructing the `ChunkType`.
         self.is_reserved_bit_valid()
     }
 
