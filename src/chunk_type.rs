@@ -80,7 +80,7 @@ impl TryFrom<[u8; 4]> for ChunkType {
             // Clear the 5th bit so the byte can be normalized.
             let upper = b & !0x20; // 0b1101_1111
             if !upper.is_ascii_uppercase() {
-                anyhow::bail!("invalid byte for chunk type: '{}'", b as char)
+                anyhow::bail!("invalid PNG chunk type: invalid byte '{}'", b as char)
             }
         }
 
@@ -92,10 +92,15 @@ impl FromStr for ChunkType {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> result::Result<Self, Self::Err> {
-        anyhow::ensure!(s.len() == 4, "input must be exactly 4 bytes: {}", s);
+        anyhow::ensure!(
+            s.len() == 4,
+            "invalid PNG chunk type: must be exactly 4 bytes: \"{}\"",
+            s
+        );
 
         let mut iter = s.bytes();
         ChunkType::try_from(std::array::from_fn(|_| {
+            // SAFETY: Previously checked for byte length of 4.
             iter.next()
                 .expect("byte iterator must yield exactly 4 bytes")
         }))
