@@ -22,47 +22,47 @@ use std::{fmt, result};
 
 /// Chunk type of a chunk within a PNG datastream.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct ChunkType {
+pub(crate) struct ChunkType {
     inner: [u8; 4],
 }
 
 impl ChunkType {
     /// Returns the raw bytes of the chunk type.
     #[inline]
-    pub const fn bytes(&self) -> [u8; 4] {
+    pub(crate) const fn bytes(&self) -> [u8; 4] {
         self.inner
     }
 
     /// Returns `true` if the chunk type is valid.
     #[inline]
-    pub fn is_valid(&self) -> bool {
+    pub(crate) fn is_valid(&self) -> bool {
         // Other validation occurs when constructing the `ChunkType`.
         self.is_reserved_bit_valid()
     }
 
     /// Returns `true` if the chunk type has the `critical` property bit set.
     #[inline]
-    pub fn is_critical(&self) -> bool {
+    pub(crate) fn is_critical(&self) -> bool {
         ((self.inner[0] >> 5) & 0x01) == 0
     }
 
     /// Returns `true` if the chunk type has the `public` property bit set.
     #[inline]
-    pub fn is_public(&self) -> bool {
+    pub(crate) fn is_public(&self) -> bool {
         ((self.inner[1] >> 5) & 0x01) == 0
     }
 
     /// Returns `true` if the chunk type has a valid reserved bit according to  
     /// version 3.0 of the PNG specification.
     #[inline]
-    pub fn is_reserved_bit_valid(&self) -> bool {
+    pub(crate) fn is_reserved_bit_valid(&self) -> bool {
         ((self.inner[2] >> 5) & 0x01) == 0
     }
 
     /// Returns `true` if the chunk type has the `safe-to-copy` property bit
     /// set.
     #[inline]
-    pub fn is_safe_to_copy(&self) -> bool {
+    pub(crate) fn is_safe_to_copy(&self) -> bool {
         ((self.inner[3] >> 5) & 0x01) == 1
     }
 }

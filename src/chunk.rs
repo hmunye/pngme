@@ -56,7 +56,7 @@ const fn precompute_crc_table() -> [u32; 256] {
 
 /// A single chunk within a PNG datastream.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Chunk {
+pub(crate) struct Chunk {
     length: u32,
     chunk_type: ChunkType,
     data: Vec<u8>,
@@ -69,7 +69,7 @@ impl Chunk {
     /// # Errors
     ///
     /// Returns an error if the data's length in bytes exceeds [`i32::MAX`].
-    pub fn new(chunk_type: ChunkType, data: Vec<u8>) -> Result<Chunk> {
+    pub(crate) fn new(chunk_type: ChunkType, data: Vec<u8>) -> Result<Chunk> {
         anyhow::ensure!(
             data.len() <= i32::MAX as usize,
             "invalid PNG chunk: data length must not exceed i32::MAX bytes, but received: {}",
@@ -87,39 +87,39 @@ impl Chunk {
         })
     }
 
-    /// Returns the length of the chunk.
+    /// Returns the length of the chunk data in bytes.
     #[inline]
-    pub const fn length(&self) -> u32 {
+    pub(crate) const fn length(&self) -> u32 {
         self.length
     }
 
     /// Returns the `ChunkType` of the chunk.
     #[inline]
-    pub const fn chunk_type(&self) -> ChunkType {
+    pub(crate) const fn chunk_type(&self) -> ChunkType {
         self.chunk_type
     }
 
     /// Returns a shared reference to the chunk data.
     #[inline]
-    pub fn data(&self) -> &[u8] {
+    pub(crate) fn data(&self) -> &[u8] {
         &self.data
     }
 
     /// Returns the CRC of the chunk.
     #[inline]
-    pub const fn crc(&self) -> u32 {
+    pub(crate) const fn crc(&self) -> u32 {
         self.crc
     }
 
     /// Returns the size in bytes of the chunk.
     #[inline]
-    pub const fn size(&self) -> usize {
-        mem::size_of::<u32>() * 2 + mem::size_of::<ChunkType>() + self.data.len()
+    pub(crate) const fn size(&self) -> usize {
+        mem::size_of::<u32>() * 2 + mem::size_of::<ChunkType>() + self.length() as usize
     }
 
     /// Returns the memory representation of the chunk as a byte array in
     /// big-endian (network) byte order.
-    pub fn as_bytes(&self) -> Vec<u8> {
+    pub(crate) fn as_bytes(&self) -> Vec<u8> {
         let chunk_size = self.size();
 
         let mut bytes = Vec::with_capacity(chunk_size);
@@ -138,7 +138,7 @@ impl Chunk {
             bytes[offset..offset + self.data.len()].copy_from_slice(&self.data);
             offset += self.data.len();
         }
-        bytes[offset..offset + 4].copy_from_slice(&self.crc.to_be_bytes());
+        bytes[offset..offset + 4].copy_from_slice(&self.crc().to_be_bytes());
 
         debug_assert!(
             offset + 4 == chunk_size, // Account for the last 4 bytes copied.

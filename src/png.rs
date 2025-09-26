@@ -17,7 +17,7 @@ use crate::chunk::Chunk;
 /// PNG (Portable Network Graphics) datastream.
 #[derive(Debug)]
 #[allow(clippy::upper_case_acronyms)]
-pub struct PNG {
+pub(crate) struct PNG {
     chunks: Vec<Chunk>,
 }
 
@@ -29,20 +29,20 @@ impl PNG {
 
     /// Creates a new PNG with the specified chunks.
     #[inline]
-    pub const fn from_chunks(chunks: Vec<Chunk>) -> Self {
+    pub(crate) const fn from_chunks(chunks: Vec<Chunk>) -> Self {
         Self { chunks }
     }
 
-    /// Appends the provided chunk to the PNG.
+    /// Appends the provided chunk to the PNG, after the `IHDR` chunk.
     #[inline]
-    pub fn append_chunk(&mut self, chunk: Chunk) {
+    pub(crate) fn append_chunk(&mut self, chunk: Chunk) {
         // Need to insert after the IHDR chunk.
         self.chunks.insert(1, chunk)
     }
 
     /// Removes the first occurrence of the chunk with a matching chunk type
-    /// from the PNG and returns it, or None if it could not be found.
-    pub fn remove_first_chunk(&mut self, chunk_type: &str) -> Option<Chunk> {
+    /// from the PNG and returns it, or `None` if it could not be found.
+    pub(crate) fn remove_chunk(&mut self, chunk_type: &str) -> Option<Chunk> {
         // Chunk type must be a 4 byte sequence.
         if chunk_type.len() != 4 {
             return None;
@@ -62,19 +62,19 @@ impl PNG {
 
     /// Returns the header of the PNG.
     #[inline]
-    pub const fn header(&self) -> [u8; 8] {
+    pub(crate) const fn header(&self) -> [u8; 8] {
         Self::MAGIC
     }
 
     /// Returns a shared reference to the chunks of the PNG.
     #[inline]
-    pub fn chunks(&self) -> &[Chunk] {
+    pub(crate) fn chunks(&self) -> &[Chunk] {
         &self.chunks
     }
 
     /// Returns the first occurrence of the chunk with a matching chunk type
-    /// from the PNG, or None if it could not be found.
-    pub fn chunk_by_type(&self, chunk_type: &str) -> Option<&Chunk> {
+    /// from the PNG, or `None` if it could not be found.
+    pub(crate) fn chunk_by_type(&self, chunk_type: &str) -> Option<&Chunk> {
         // Chunk type must be a 4 byte sequence.
         if chunk_type.len() != 4 {
             return None;
@@ -85,13 +85,13 @@ impl PNG {
             .find(|c| c.chunk_type().bytes() == chunk_type.as_bytes())
     }
 
-    /// Returns the memory representation of the PNG chunk as a byte array in
-    /// big-endian (network) byte order.
-    pub fn as_bytes(&self) -> Vec<u8> {
+    /// Returns the memory representation of the PNG datastream as a byte array
+    /// in big-endian (network) byte order.
+    pub(crate) fn as_bytes(&self) -> Vec<u8> {
         let mut bytes = Vec::with_capacity(8);
 
         // Ensure the PNG header is included.
-        bytes.extend(Self::MAGIC.iter());
+        bytes.extend(self.header());
 
         for chunk in self.chunks() {
             bytes.extend(chunk.as_bytes().iter());
@@ -186,7 +186,7 @@ impl TryFrom<&[u8]> for PNG {
             offset += chunk_size;
         }
 
-        Ok(PNG { chunks })
+        Ok(PNG::from_chunks(chunks))
     }
 }
 
@@ -349,7 +349,7 @@ mod tests {
     fn test_png_remove_first_chunk() {
         let mut png = generate_png();
         png.append_chunk(chunk_from_parts("TeSt", b"Message").unwrap());
-        png.remove_first_chunk("TeSt").unwrap();
+        png.remove_chunk("TeSt").unwrap();
         let chunk = png.chunk_by_type("TeSt");
         assert!(chunk.is_none());
     }

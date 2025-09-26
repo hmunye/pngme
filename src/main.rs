@@ -3,15 +3,15 @@
 #![deny(missing_docs)]
 #![warn(missing_debug_implementations)]
 #![warn(rust_2018_idioms)]
-#![allow(unused_variables)]
-#![allow(dead_code)]
 
 mod chunk;
 mod chunk_type;
+mod commands;
 mod png;
 
 use std::path::PathBuf;
 
+use anyhow::Result;
 use clap::{Args, Parser, Subcommand};
 
 #[derive(Debug, Parser)]
@@ -32,6 +32,8 @@ enum Commands {
         opts: CommandOpts,
         #[arg(value_name = "message")]
         message: String,
+        #[arg(value_name = "outfile")]
+        output_path: Option<PathBuf>,
     },
     /// Decodes a message from the PNG file given the chunk type.
     #[command(arg_required_else_help = true)]
@@ -44,42 +46,43 @@ enum Commands {
     Remove {
         #[command(flatten)]
         opts: CommandOpts,
+        #[arg(value_name = "outfile")]
+        output_path: Option<PathBuf>,
     },
 }
 
 #[derive(Args, Debug)]
 struct CommandOpts {
-    #[arg(value_name = "file_path")]
+    #[arg(value_name = "infile")]
     file_path: PathBuf,
     #[arg(value_name = "chunk_type")]
     chunk_type: String,
 }
 
-fn main() {
+fn main() -> Result<()> {
     let args = Cli::parse();
 
     match args.command {
-        Commands::Encode { opts, message } => {
-            println!(
-                "encoding message '{}' as type '{}' in file {}",
-                message,
-                opts.chunk_type,
-                opts.file_path.display()
-            );
+        Commands::Encode {
+            opts,
+            message,
+            output_path,
+        } => {
+            commands::invoke_encode(opts.file_path, opts.chunk_type, message, output_path)?;
         }
         Commands::Decode { opts } => {
-            println!(
-                "decoding type '{}' from file {}",
-                opts.chunk_type,
-                opts.file_path.display()
-            );
+            if let Some(message) = commands::invoke_decode(opts.file_path, opts.chunk_type)? {
+                println!("{message}");
+            }
         }
-        Commands::Remove { opts } => {
-            println!(
-                "removing type '{}' from file {}",
-                opts.chunk_type,
-                opts.file_path.display()
-            );
+        Commands::Remove { opts, output_path } => {
+            if let Some(message) =
+                commands::invoke_remove(opts.file_path, opts.chunk_type, output_path)?
+            {
+                println!("{message}");
+            }
         }
     }
+
+    Ok(())
 }
