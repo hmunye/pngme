@@ -25,7 +25,7 @@ struct Cli {
 #[derive(Debug, Subcommand)]
 #[command(subcommand_value_name = "command")]
 enum Commands {
-    /// Encodes a message into the PNG file given its chunk type.
+    /// Encodes a message into a PNG file.
     #[command(arg_required_else_help = true)]
     Encode {
         #[command(flatten)]
@@ -35,13 +35,13 @@ enum Commands {
         #[arg(value_name = "outfile")]
         output_path: Option<PathBuf>,
     },
-    /// Decodes a message from the PNG file given the chunk type.
+    /// Decodes a message from a PNG file.
     #[command(arg_required_else_help = true)]
     Decode {
         #[command(flatten)]
         opts: CommandOpts,
     },
-    /// Removes a message from the PNG file given the chunk type.
+    /// Removes a message from a PNG file.
     #[command(arg_required_else_help = true)]
     Remove {
         #[command(flatten)]
