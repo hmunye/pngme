@@ -5,9 +5,9 @@
 //! these chunks determines how the image is encoded and decoded.
 //!
 //! At minimum, a valid PNG must include an `IHDR` chunk (image header),
-//! one or more `IDAT` chunks (image data), and an `IEND` chunk (EOF).
-//! Additional ancillary chunks (like `tEXt`, `zTXt`, `pHYs`, etc.) may also be
-//! present and are used for storing metadata or hints about how to interpret the image.
+//! one or more `IDAT` chunks (image data), and an `IEND` chunk. Additional
+//! ancillary chunks (like `tEXt`, `zTXt`, `pHYs`, etc.) may also be present and
+//! are used for storing metadata or hints about how to interpret the image.
 
 use std::convert::TryFrom;
 use std::{fmt, result};
@@ -30,14 +30,15 @@ impl PNG {
     /// Creates a new PNG with the specified chunks.
     #[inline]
     pub(crate) const fn from_chunks(chunks: Vec<Chunk>) -> Self {
+        // TODO: Ensure the chunks form a valid PNG (`TryFrom`).
         Self { chunks }
     }
 
-    /// Appends the provided chunk to the PNG, after the `IHDR` chunk.
+    /// Appends the provided chunk to the PNG.
     #[inline]
     pub(crate) fn append_chunk(&mut self, chunk: Chunk) {
-        // Need to insert after the IHDR chunk.
-        self.chunks.insert(1, chunk)
+        // Need to insert before the `IEND` chunk.
+        self.chunks.insert(self.chunks.len() - 1, chunk)
     }
 
     /// Removes the first occurrence of the chunk with a matching chunk type
@@ -88,7 +89,8 @@ impl PNG {
     /// Returns the memory representation of the PNG datastream as a byte array
     /// in big-endian (network) byte order.
     pub(crate) fn as_bytes(&self) -> Vec<u8> {
-        let mut bytes = Vec::with_capacity(8);
+        // Minimum PNG datastream size is 64 bytes:
+        let mut bytes = Vec::with_capacity(64);
 
         // Ensure the PNG header is included.
         bytes.extend(self.header());
@@ -107,7 +109,7 @@ impl TryFrom<&[u8]> for PNG {
     fn try_from(bytes: &[u8]) -> result::Result<Self, Self::Error> {
         // TODO: Check ordering of chunks when decoding.
 
-        // Minimum PNG datastream size is 59 bytes, based on the following:
+        // Minimum PNG datastream size is 64 bytes, based on the following:
         //
         // - 8 bytes: PNG signature
         //

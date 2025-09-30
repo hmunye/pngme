@@ -25,10 +25,10 @@ use crate::chunk_type::ChunkType;
 
 use anyhow::Result;
 
-/// Table of CRCs of all 8-bit messages.
+/// Table of CRCs of all 8-bit messages, computed at compile-time.
 const CRC_TABLE: [u32; 256] = precompute_crc_table();
 
-/// Returns a CRC table for all byte values (0-255), computed at compile-time.
+/// Returns a CRC table for all byte values (0-255).
 const fn precompute_crc_table() -> [u32; 256] {
     let mut table = [0u32; 256];
 
